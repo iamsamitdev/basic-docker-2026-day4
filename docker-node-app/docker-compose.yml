@@ -1,0 +1,40 @@
+networks:
+  nodejs_network:
+    name: nodejs_network
+    driver: bridge
+
+services:
+  nodejs:
+    image: nodejs_app:1.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mynodeapp
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3400:3000"
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true # สำหรับ Windows เพื่อให้ nodemon ทำงานได้
+    networks:
+      - nodejs_network
+    restart: always # auto-restart the container if it stops
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "28017:27017"
+    networks:
+      - nodejs_network
+    restart: always
+    volumes:
+      # - ./mongo_data:/data/db # auto-restart the container if it stops
+      - mongo_data:/data/db
+  
+# Named volume for MongoDB data persistence
+volumes:
+  mongo_data:
+    name: mongo_data
+    driver: local

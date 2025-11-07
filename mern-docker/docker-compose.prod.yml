@@ -1,0 +1,55 @@
+networks:
+  mern-network:
+    name: mern-network
+    driver: bridge
+
+services:
+
+  # mongo service
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "29017:27017"
+    volumes:
+      - mongodb_data:/data/db # ใช้ volume named mongodb_data
+    networks:
+      - mern-network
+    restart: always
+
+  # server service
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.prod
+    # image: iamsamitdev/mern-server:2.0
+    container_name: server
+    ports:
+      - "5200:5000"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - NODE_ENV=production
+    depends_on:
+      - mongodb
+    networks:
+      - mern-network
+
+  # client service
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.prod
+    image: mern-client:1.0
+    container_name: client
+    ports:
+      - "8088:80"
+    environment:
+      - VITE_API_URL=http://localhost:5200
+    depends_on:
+      - server
+    networks:
+      - mern-network
+
+volumes:
+  mongodb_data:
+    driver: local

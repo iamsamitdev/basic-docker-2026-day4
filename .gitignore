@@ -1,0 +1,8 @@
+docker-node-app/node_modules
+docker-wordpress-app/wordpress
+mern-docker/mongodb_data
+mern-docker/client/node_modules
+mern-docker/server/node_modules
+mern-docker/server/.env
+pythondjango-docker/.venv
+pythondjango-docker/postgres_data

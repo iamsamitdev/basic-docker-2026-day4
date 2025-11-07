@@ -1,0 +1,21 @@
+networks:
+  pt_network:
+    name: pt_network
+    driver: bridge
+
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer_container
+    ports:
+      - "8989:8000"
+      - "9553:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - pt_data:/data
+    networks:
+      - pt_network
+    restart: always
+
+volumes:
+  pt_data:

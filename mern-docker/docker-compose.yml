@@ -1,0 +1,61 @@
+networks:
+  mern-network:
+    name: mern-network
+    driver: bridge
+
+services:
+
+  # mongo service
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "28017:27017"
+    volumes:
+      - ./mongodb_data:/data/db
+    networks:
+      - mern-network
+    restart: always
+
+  # server service
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: mern-server:1.0
+    container_name: server
+    ports:
+      - "5100:5000"
+    volumes:
+      - ./server:/app
+      - /app/node_modules # bookmark คือการให้ docker ไม่เอา node_modules มาใช้งาน
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true # สำหรับ Windows เพื่อให้ nodemon ทำงานได้
+    command: npm run dev
+    networks:
+      - mern-network
+    restart: always
+    depends_on:
+      - mongodb
+
+  # client service
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    image: mern-client:1.0
+    container_name: client
+    ports:
+      - "3100:3000"
+    volumes:
+      - ./client:/app
+      - /app/node_modules # bookmark คือการให้ docker ไม่เอา node_modules มาใช้งาน
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    command: npm run dev
+    networks:
+      - mern-network
+    restart: always
+    depends_on:
+      - server
