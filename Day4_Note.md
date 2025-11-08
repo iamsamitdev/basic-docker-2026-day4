@@ -437,7 +437,7 @@ docker compose -f docker-compose.prod.yml config
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-## 2. Docker Python Django Application
+## 2. Docker Python Django Application และ UV
 > การสร้างและรันแอปพลิเคชัน Python Django ด้วย Docker 
 
 ## 🏗️ โครงสร้างโปรเจ็กต์
@@ -445,17 +445,17 @@ docker compose -f docker-compose.prod.yml up -d --build
 ```
 pythondjango-docker/
 ├── Dockerfile                  # Dockerfile สำหรับ Development
-├── Dockerfile.prod            # Dockerfile สำหรับ Production (multi-stage)
-├── docker-compose.dev.yml     # สภาพแวดล้อม Development
-├── docker-compose.prod.yml    # สภาพแวดล้อม Production
-├── .dockerignore              # ไฟล์ Docker ignore
-├── .env.prod.example          # Template สำหรับสภาพแวดล้อม Production
+├── Dockerfile.prod             # Dockerfile สำหรับ Production (multi-stage)
+├── docker-compose.yml          # สภาพแวดล้อม Development
+├── docker-compose.prod.yml     # สภาพแวดล้อม Production
+├── .dockerignore               # ไฟล์ Docker ignore
+├── .env                        # Template สำหรับสภาพแวดล้อม Production
 └── docker/
     ├── nginx/
-    │   ├── nginx.conf         # การตั้งค่าหลัก Nginx
-    │   └── default.conf       # การตั้งค่าไซต์ Nginx
+    │   ├── nginx.conf          # การตั้งค่าหลัก Nginx
+    │   └── default.conf        # การตั้งค่าไซต์ Nginx
     └── postgres/
-        └── init.sql           # การเริ่มต้น PostgreSQL
+        └── init.sql            # การเริ่มต้น PostgreSQL
 ```
 
 ### ขั้นตอนที่ 1: สร้างโฟลเดอร์โปรเจกต์
@@ -470,21 +470,21 @@ docker run --rm -it \
   -v ${PWD}:/app \
   -p 8110:8000 \
   ghcr.io/astral-sh/uv:python3.13-alpine \
-  sh -c "cd /app && uv init --python 3.13 && uv add django && uv sync && uv run django-admin startproject bookstore_project . && uv run manage.py startapp books_app && uv add psycopg python-decouple && uv run manage.py runserver 0.0.0.0:8000"
+  sh -c "cd /app && uv init --python 3.13 && uv add django && uv sync && uv run django-admin startproject bookstore_project . && uv run manage.py startapp books_app && uv add psycopg python-decouple gunicorn && uv run manage.py runserver 0.0.0.0:8000"
 
 # for Windows (PowerShell)
 docker run --rm -it `
   -v ${PWD}:/app `
   -p 8110:8000 `
   ghcr.io/astral-sh/uv:python3.13-alpine `
-  sh -c "cd /app && uv init --python 3.13 && uv add django && uv sync && uv run django-admin startproject bookstore_project . && uv run manage.py startapp books_app && uv add psycopg python-decouple && uv run manage.py runserver 0.0.0.0:8000"
+  sh -c "cd /app && uv init --python 3.13 && uv add django && uv sync && uv run django-admin startproject bookstore_project . && uv run manage.py startapp books_app && uv add psycopg python-decouple gunicorn && uv run manage.py runserver 0.0.0.0:8000"
 
 # for Windows (CMD)
 docker run --rm -it ^
   -v %cd%:/app ^
   -p 8110:8000 ^
   ghcr.io/astral-sh/uv:python3.13-alpine ^
-  sh -c "cd /app && uv init --python 3.13 && uv add django && uv sync && uv run django-admin startproject bookstore_project . && uv run manage.py startapp books_app && uv add psycopg python-decouple && uv run manage.py runserver 0.0.0.0:8000"
+  sh -c "cd /app && uv init --python 3.13 && uv add django && uv sync && uv run django-admin startproject bookstore_project . && uv run manage.py startapp books_app && uv add psycopg python-decouple gunicorn && uv run manage.py runserver 0.0.0.0:8000"
 ```
 ผลลัพธ์ใน `pyproject.toml`:
 ```toml
@@ -724,7 +724,7 @@ README.md
 *.md
 ```
 
-### ขั้นตอนที่ 6: สร้างไฟล์ init.sql สำหรับการเริ่มต้นฐานข้อมูล
+### ขั้นตอนที่ 7: สร้างไฟล์ init.sql สำหรับการเริ่มต้นฐานข้อมูล
 สร้างไฟล์ `docker/postgres/init.sql` ดังนี้:
 ```sql
 -- PostgreSQL initialization script
@@ -744,7 +744,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 SET timezone = 'UTC';
 ```
 
-### ขั้นตอนที่ 7: แก้ไขการตั้งค่า Django สำหรับฐานข้อมูล
+### ขั้นตอนที่ 8: แก้ไขการตั้งค่า Django สำหรับฐานข้อมูล
 เปิดไฟล์ `bookstore_project/settings.py` และแก้ไขการตั้งค่าฐานข้อมูลเป็นดังนี้:
 ```python
 import os
@@ -780,16 +780,16 @@ DATABASES = {
 }
 ```
 
-### ขั้นตอนที่ 8: รันแอปพลิเคชัน
+### ขั้นตอนที่ 9: รันแอปพลิเคชัน
 ```bash
 docker compose up -d --build
 ```
 
-### ขั้นตอนที่ 9: ทดสอบแอปพลิเคชัน
+### ขั้นตอนที่ 10: ทดสอบแอปพลิเคชัน
 - เปิดเว็บเบราว์เซอร์และไปที่ `http://localhost:8110
 
 
-### ขั้นตอนที่ 10: run migrations และสร้าง superuser
+### ขั้นตอนที่ 11: run migrations และสร้าง superuser
 ```bash
 docker exec -it djangoweb sh -c "python manage.py migrate"
 docker exec -it djangoweb sh -c "python manage.py createsuperuser"
@@ -797,11 +797,6 @@ docker exec -it djangoweb sh -c "python manage.py createsuperuser"
 
 - เปิดเว็บเบราว์เซอร์และไปที่ `http://localhost:8110` เพื่อตรวจสอบว่าโปรเจ็กต์ Django รันได้ถูกต้อง
 - ไปที่ `http://localhost:8110/admin` เพื่อล็อกอินเข้าสู่แผงผู้ดูแลระบบ Django
-
-### ขั้นตอนที่ 11: หยุดและลบคอนเทนเนอร์
-```bash
-docker compose down --rmi all
-```
 
 ## 3. Docker Hub และการจัดการ Image
 > การใช้งาน Docker Hub สำหรับการจัดการ Docker Images 
